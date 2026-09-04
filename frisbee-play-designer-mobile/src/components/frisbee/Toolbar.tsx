@@ -22,7 +22,6 @@ import { cn } from '@/lib/utils'
 export function Toolbar() {
   const tool = useFrisbee((s) => s.tool)
   const setTool = useFrisbee((s) => s.setTool)
-  const addPlayer = useFrisbee((s) => s.addPlayer)
   const selectedCount = useFrisbee((s) => s.selectedPlayerIds.length + s.selectedConeIds.length)
   const removeSelected = useFrisbee((s) => s.removeSelected)
   const undo = useFrisbee((s) => s.undo)
@@ -34,11 +33,16 @@ export function Toolbar() {
   const stylusOnly = useFrisbee((s) => s.stylusOnly)
   const setStylusOnly = useFrisbee((s) => s.setStylusOnly)
 
+  // All tools including the multi-place offense/defense tools.
+  // Tapping the icon activates the tool; tapping the field places a player at the tapped spot.
+  // The tool stays active so you can keep tapping to place more.
   const tools = [
     { id: 'select' as const, label: 'Select & Move', icon: MousePointer2 },
     { id: 'arrow' as const, label: 'Draw Cut (Player Run)', icon: ArrowRight },
     { id: 'disc' as const, label: 'Throw Disc / Assign Holder', icon: Disc3 },
-    { id: 'cone' as const, label: 'Place Cone (drill marker)', icon: Cone },
+    { id: 'cone' as const, label: 'Place Cone (drill marker) — tap field repeatedly', icon: Cone },
+    { id: 'place-offense' as const, label: 'Place Offense Players — tap field repeatedly', icon: Swords, color: 'text-sky-400' },
+    { id: 'place-defense' as const, label: 'Place Defense X — tap field repeatedly', icon: Shield, color: 'text-red-400' },
     { id: 'pen' as const, label: 'Freehand Draw', icon: Pen },
     { id: 'erase' as const, label: 'Erase strokes, cones, arrows', icon: Eraser },
   ]
@@ -61,7 +65,7 @@ export function Toolbar() {
                 )}
                 onClick={() => setTool(t.id)}
               >
-                <t.icon className="h-5 w-5" />
+                <t.icon className={cn('h-5 w-5', t.color)} />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right">{t.label}</TooltipContent>
@@ -115,30 +119,6 @@ export function Toolbar() {
           title="Redo (Ctrl+Shift+Z)"
         >
           <Redo2 className="h-5 w-5" />
-        </Button>
-
-        <div className="my-1 border-t border-border" />
-
-        <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1 mb-1">
-          Add
-        </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-12 w-12 hover:bg-sky-500/15 hover:text-sky-300"
-          onClick={() => addPlayer('offense')}
-          title="Add Offense Player (circle)"
-        >
-          <Swords className="h-5 w-5 text-sky-400" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-12 w-12 hover:bg-red-500/15 hover:text-red-300"
-          onClick={() => addPlayer('defense')}
-          title="Add Defense Player (X)"
-        >
-          <Shield className="h-5 w-5 text-red-400" />
         </Button>
 
         <div className="my-1 border-t border-border" />

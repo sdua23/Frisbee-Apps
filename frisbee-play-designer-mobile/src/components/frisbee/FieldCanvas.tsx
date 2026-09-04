@@ -19,11 +19,34 @@ import {
 } from '@/lib/frisbee/render'
 import type { Arrow, Vec2 } from '@/lib/frisbee/types'
 
-function toVec(clientX: number, clientY: number, rect: DOMRect): Vec2 {
+// Convert a clientX/clientY position to a 0-100 canvas coordinate.
+// IMPORTANT: getBoundingClientRect() returns the BORDER box (includes the 2px canvas border).
+// The canvas internal drawing area is the CONTENT box (excluding border), so we must
+// subtract the border width from both the offset and the dimensions. Without this fix,
+// clicks near the edges are offset by a few percent — most noticeable at top/bottom of the field.
+function toVec(clientX: number, clientY: number, rect: DOMRect, borderLeft = 0, borderTop = 0, borderRight = 0, borderBottom = 0): Vec2 {
+  const contentLeft = rect.left + borderLeft
+  const contentTop = rect.top + borderTop
+  const contentWidth = rect.width - borderLeft - borderRight
+  const contentHeight = rect.height - borderTop - borderBottom
+  // Guard against divide-by-zero (canvas not laid out yet)
+  const w = contentWidth > 0 ? contentWidth : rect.width
+  const h = contentHeight > 0 ? contentHeight : rect.height
   return {
-    x: ((clientX - rect.left) / rect.width) * 100,
-    y: ((clientY - rect.top) / rect.height) * 100,
+    x: ((clientX - contentLeft) / w) * 100,
+    y: ((clientY - contentTop) / h) * 100,
   }
+}
+
+// Convenience wrapper that reads the canvas's border widths from computed style.
+function toVecFromEvent(e: React.PointerEvent<HTMLCanvasElement>, canvas: HTMLCanvasElement): Vec2 {
+  const rect = canvas.getBoundingClientRect()
+  const cs = getComputedStyle(canvas)
+  const bl = parseFloat(cs.borderLeftWidth) || 0
+  const bt = parseFloat(cs.borderTopWidth) || 0
+  const br = parseFloat(cs.borderRightWidth) || 0
+  const bb = parseFloat(cs.borderBottomWidth) || 0
+  return toVec(e.clientX, e.clientY, rect, bl, bt, br, bb)
 }
 
 export function FieldCanvas() {
@@ -63,6 +86,7 @@ export function FieldCanvas() {
   const setMarquee = useFrisbee((s) => s.setMarquee)
   const beginInteraction = useFrisbee((s) => s.beginInteraction)
   const addCone = useFrisbee((s) => s.addCone)
+  const addPlayerAt = useFrisbee((s) => s.addPlayerAt)
   const removeCone = useFrisbee((s) => s.removeCone)
   const coneAt = useFrisbee((s) => s.coneAt)
   const removeStroke = useFrisbee((s) => s.removeStroke)
@@ -210,8 +234,7 @@ export function FieldCanvas() {
     if (e.pointerType === 'pen') penActiveRef.current = true
 
     canvas.setPointerCapture(e.pointerId)
-    const rect = canvas.getBoundingClientRect()
-    const vec = toVec(e.clientX, e.clientY, rect)
+    const vec = toVecFromEvent(e, canvas)
     const additive = e.shiftKey
 
     if (tool === 'select') {
@@ -290,6 +313,12 @@ export function FieldCanvas() {
     } else if (tool === 'cone') {
       // Tap to place a cone
       addCone(vec)
+    } else if (tool === 'place-offense') {
+      // Tap to place an offense player at the tapped location. Tool stays active so
+      // the user can keep tapping to place more.
+      addPlayerAt('offense', vec)
+    } else if (tool === 'place-defense') {
+      addPlayerAt('defense', vec)
     } else if (tool === 'pen') {
       // Start a new stroke
       setDrawingStroke({
@@ -324,8 +353,7 @@ export function FieldCanvas() {
     if (stylusOnly && e.pointerType === 'touch') return
     if (penActiveRef.current && e.pointerType === 'touch') return
 
-    const rect = canvas.getBoundingClientRect()
-    const vec = toVec(e.clientX, e.clientY, rect)
+    const vec = toVecFromEvent(e, canvas)
 
     if (dragRef.current) {
       if (!interactionStartedRef.current) {
@@ -395,8 +423,7 @@ export function FieldCanvas() {
     } catch {
       // ignore
     }
-    const rect = canvas.getBoundingClientRect()
-    const vec = toVec(e.clientX, e.clientY, rect)
+    const vec = toVecFromEvent(e, canvas)
 
     if (dragRef.current) {
       dragRef.current = null

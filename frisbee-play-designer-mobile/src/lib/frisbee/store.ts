@@ -95,6 +95,7 @@ interface FrisbeeState {
 
   // Player actions
   addPlayer: (team: Team) => void
+  addPlayerAt: (team: Team, pos: Vec2) => void
   removePlayer: (id: string) => void
   removeSelected: () => void
   updatePlayerLabel: (id: string, label: string) => void
@@ -402,6 +403,30 @@ export const useFrisbee = create<FrisbeeState>((set, get) => ({
     set({
       play: { ...play, players: [...play.players, player], keyframes, updatedAt: Date.now() },
       selectedPlayerIds: [player.id],
+    })
+  },
+
+  // Place a new player at a specific position — used by the place-offense / place-defense tools.
+  // Player is added to the current keyframe at the tapped location.
+  // Does NOT switch the tool, so the user can keep placing more players.
+  addPlayerAt: (team, pos) => {
+    get().pushHistory()
+    const play = get().play
+    const player = makePlayer(team, play.players)
+    // Clamp position to canvas bounds (with margin so the player isn't half-off-screen)
+    const clampedPos = {
+      x: Math.max(3, Math.min(97, pos.x)),
+      y: Math.max(3, Math.min(97, pos.y)),
+    }
+    // Add to all keyframes so the player exists across the entire animation timeline
+    const keyframes = play.keyframes.map((kf) => ({
+      ...kf,
+      positions: { ...kf.positions, [player.id]: clampedPos },
+    }))
+    set({
+      play: { ...play, players: [...play.players, player], keyframes, updatedAt: Date.now() },
+      selectedPlayerIds: [player.id],
+      selectedConeIds: [],
     })
   },
 

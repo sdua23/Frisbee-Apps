@@ -6,10 +6,12 @@ export type Team = 'offense' | 'defense'
 // - select: drag players / marquee
 // - arrow: dashed cut arrow (player movement)
 // - disc: throw arrow + tap to assign disc holder
-// - cone: tap to place a drill cone
+// - cone: tap to place a drill cone (multi-place)
 // - pen: freehand drawing
 // - erase: tap strokes/cones/arrows to delete
-export type Tool = 'select' | 'arrow' | 'disc' | 'cone' | 'pen' | 'erase'
+// - place-offense: tap field to place offense players (multi-place)
+// - place-defense: tap field to place defense X's (multi-place)
+export type Tool = 'select' | 'arrow' | 'disc' | 'cone' | 'pen' | 'erase' | 'place-offense' | 'place-defense'
 
 export interface Player {
   id: string
