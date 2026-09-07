@@ -171,9 +171,9 @@ export function Timeline() {
         </div>
       </div>
 
-      {/* Keyframes list */}
-      <div className="rounded-lg border border-border bg-background/40 p-3 flex-1 min-h-0 flex flex-col">
-        <div className="flex items-center justify-between mb-2">
+      {/* Keyframes — horizontal scroll strip on mobile, vertical list on desktop */}
+      <div className="rounded-lg border border-border bg-background/40 p-2 flex-1 min-h-0 flex flex-col">
+        <div className="flex items-center justify-between mb-2 px-1">
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Keyframes
           </span>
@@ -188,77 +188,81 @@ export function Timeline() {
           </Button>
         </div>
 
-        <div className="flex-1 overflow-y-auto -mx-1 px-1 space-y-1.5 min-h-0">
-          {play.keyframes.map((kf, i) => {
-            const isActive = i === currentFrameIndex
-            const arrowCount = play.arrows.filter((a) => a.frameIndex === i).length
-            return (
-              <div
-                key={kf.id}
-                className={cn(
-                  'group rounded-md border p-2 cursor-pointer transition-colors',
-                  isActive
-                    ? 'border-primary bg-primary/10'
-                    : 'border-border hover:border-primary/40 hover:bg-accent/40',
-                )}
-                onClick={() => {
-                  setPlaying(false)
-                  setCurrentFrame(i)
-                }}
-              >
-                <div className="flex items-center gap-2">
-                  <div
-                    className={cn(
-                      'flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-bold',
-                      isActive
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground',
-                    )}
-                  >
-                    {i + 1}
+        {/* Horizontal scroll strip — works great on touch (mobile) and mouse (desktop) */}
+        <div className="flex-1 overflow-x-auto overflow-y-hidden min-h-0 lg:overflow-x-hidden lg:overflow-y-auto lg:block">
+          <div className="flex lg:flex-col gap-1.5 lg:px-0 px-1 pb-1 lg:pb-0 min-w-max lg:min-w-0">
+            {play.keyframes.map((kf, i) => {
+              const isActive = i === currentFrameIndex
+              const arrowCount = play.arrows.filter((a) => a.frameIndex === i).length
+              return (
+                <div
+                  key={kf.id}
+                  className={cn(
+                    'group rounded-md border p-2 cursor-pointer transition-colors shrink-0',
+                    'min-w-[110px] lg:min-w-0 lg:w-auto',
+                    isActive
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border hover:border-primary/40 hover:bg-accent/40',
+                  )}
+                  onClick={() => {
+                    setPlaying(false)
+                    setCurrentFrame(i)
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={cn(
+                        'flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-bold',
+                        isActive
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-muted-foreground',
+                      )}
+                    >
+                      {i + 1}
+                    </div>
+                    <Input
+                      value={kf.note ?? ''}
+                      placeholder={`Frame ${i + 1}`}
+                      onChange={(e) => updateKeyframeNote(kf.id, e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="h-7 text-xs border-0 bg-transparent focus-visible:ring-1 focus-visible:ring-primary/30 px-1 min-w-0"
+                    />
+                    <div className="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity shrink-0">
+                      {arrowCount > 0 && (
+                        <button
+                          className="text-[10px] text-muted-foreground hover:text-foreground px-1"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            removeArrowsForFrame(i)
+                          }}
+                          title="Clear arrows on this frame"
+                        >
+                          {arrowCount}✕
+                        </button>
+                      )}
+                      {play.keyframes.length > 1 && (
+                        <button
+                          className="text-muted-foreground hover:text-destructive p-1"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            removeKeyframe(i)
+                          }}
+                          title="Delete keyframe"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <Input
-                    value={kf.note ?? ''}
-                    placeholder={`Frame ${i + 1}`}
-                    onChange={(e) => updateKeyframeNote(kf.id, e.target.value)}
-                    onClick={(e) => e.stopPropagation()}
-                    className="h-7 text-xs border-0 bg-transparent focus-visible:ring-1 focus-visible:ring-primary/30 px-1"
-                  />
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {arrowCount > 0 && (
-                      <button
-                        className="text-[10px] text-muted-foreground hover:text-foreground px-1"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          removeArrowsForFrame(i)
-                        }}
-                        title="Clear arrows on this frame"
-                      >
-                        {arrowCount} arrows ✕
-                      </button>
-                    )}
-                    {play.keyframes.length > 1 && (
-                      <button
-                        className="text-muted-foreground hover:text-destructive p-1"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          removeKeyframe(i)
-                        }}
-                        title="Delete keyframe"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    )}
-                  </div>
+                  {kf.discHolderId && (
+                    <div className="mt-1 ml-8 text-[10px] text-orange-400 truncate">
+                      disc → {play.players.find((p) => p.id === kf.discHolderId)?.label ?? '?'}
+                    </div>
+                  )}
                 </div>
-                {kf.discHolderId && (
-                  <div className="mt-1 ml-8 text-[10px] text-orange-400">
-                    disc → {play.players.find((p) => p.id === kf.discHolderId)?.label ?? '?'}
-                  </div>
-                )}
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
       </div>
 

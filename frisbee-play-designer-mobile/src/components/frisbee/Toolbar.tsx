@@ -30,21 +30,20 @@ export function Toolbar() {
   const canRedo = useFrisbee((s) => s.future.length > 0)
   const activeColor = useFrisbee((s) => s.activeColor)
   const setActiveColor = useFrisbee((s) => s.setActiveColor)
-  const stylusOnly = useFrisbee((s) => s.stylusOnly)
-  const setStylusOnly = useFrisbee((s) => s.setStylusOnly)
 
-  // All tools including the multi-place offense/defense tools.
-  // Tapping the icon activates the tool; tapping the field places a player at the tapped spot.
-  // The tool stays active so you can keep tapping to place more.
+  // All tools including multi-place offense/defense. Delete is in this row too, so after
+  // you multi-select items (via Select tool with shift-tap or marquee), one tap on Delete
+  // removes them all.
   const tools = [
-    { id: 'select' as const, label: 'Select & Move', icon: MousePointer2 },
-    { id: 'arrow' as const, label: 'Draw Cut (Player Run)', icon: ArrowRight },
-    { id: 'disc' as const, label: 'Throw Disc / Assign Holder', icon: Disc3 },
-    { id: 'cone' as const, label: 'Place Cone (drill marker) — tap field repeatedly', icon: Cone },
-    { id: 'place-offense' as const, label: 'Place Offense Players — tap field repeatedly', icon: Swords, color: 'text-sky-400' },
-    { id: 'place-defense' as const, label: 'Place Defense X — tap field repeatedly', icon: Shield, color: 'text-red-400' },
-    { id: 'pen' as const, label: 'Freehand Draw', icon: Pen },
-    { id: 'erase' as const, label: 'Erase strokes, cones, arrows', icon: Eraser },
+    { id: 'select' as const, label: 'Select & Move', icon: MousePointer2, kind: 'tool' as const },
+    { id: 'arrow' as const, label: 'Draw Cut (Player Run)', icon: ArrowRight, kind: 'tool' as const },
+    { id: 'disc' as const, label: 'Throw Disc / Assign Holder', icon: Disc3, kind: 'tool' as const },
+    { id: 'cone' as const, label: 'Place Cone (drill marker) — tap field repeatedly', icon: Cone, kind: 'tool' as const },
+    { id: 'place-offense' as const, label: 'Place Offense Players — tap field repeatedly', icon: Swords, color: 'text-sky-400', kind: 'tool' as const },
+    { id: 'place-defense' as const, label: 'Place Defense X — tap field repeatedly', icon: Shield, color: 'text-red-400', kind: 'tool' as const },
+    { id: 'pen' as const, label: 'Freehand Draw', icon: Pen, kind: 'tool' as const },
+    { id: 'erase' as const, label: 'Erase strokes, cones, arrows', icon: Eraser, kind: 'tool' as const },
+    { id: '__delete' as const, label: 'Delete selected items', icon: Trash2, kind: 'action' as const, color: 'text-destructive' },
   ]
 
   return (
@@ -62,15 +61,34 @@ export function Toolbar() {
                 className={cn(
                   'h-12 w-12',
                   tool === t.id && 'ring-2 ring-primary/40',
+                  t.kind === 'action' && 'hover:bg-destructive/15',
+                  t.kind === 'action' && selectedCount === 0 && 'opacity-30',
                 )}
-                onClick={() => setTool(t.id)}
+                disabled={t.kind === 'action' && selectedCount === 0}
+                onClick={() => {
+                  if (t.kind === 'action' && t.id === '__delete') {
+                    removeSelected()
+                  } else {
+                    setTool(t.id as never)
+                  }
+                }}
               >
                 <t.icon className={cn('h-5 w-5', t.color)} />
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="right">{t.label}</TooltipContent>
+            <TooltipContent side="right">
+              {t.label}
+              {t.kind === 'action' && selectedCount > 0 ? ` (${selectedCount})` : ''}
+            </TooltipContent>
           </Tooltip>
         ))}
+
+        {/* Selection count badge below the Delete button */}
+        {selectedCount > 0 && (
+          <div className="text-[10px] text-center text-muted-foreground -mt-1">
+            {selectedCount} selected
+          </div>
+        )}
 
         <div className="my-1 border-t border-border" />
 
@@ -120,41 +138,6 @@ export function Toolbar() {
         >
           <Redo2 className="h-5 w-5" />
         </Button>
-
-        <div className="my-1 border-t border-border" />
-
-        {/* Stylus-only toggle */}
-        <button
-          onClick={() => setStylusOnly(!stylusOnly)}
-          className={cn(
-            'flex items-center justify-between gap-1 rounded-md border px-2 py-1.5 text-[10px] font-medium',
-            stylusOnly
-              ? 'bg-primary/15 border-primary/50 text-primary'
-              : 'border-border text-muted-foreground hover:bg-accent/40',
-          )}
-          title="When ON, touch is ignored so your palm doesn't draw while using the stylus"
-        >
-          <span>Stylus only</span>
-          <span className={cn('h-2 w-2 rounded-full', stylusOnly ? 'bg-primary' : 'bg-muted-foreground/40')} />
-        </button>
-
-        <div className="my-1 border-t border-border" />
-
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-12 w-12 hover:bg-destructive/15 hover:text-destructive disabled:opacity-30"
-          disabled={selectedCount === 0}
-          onClick={() => removeSelected()}
-          title="Delete Selected"
-        >
-          <Trash2 className="h-5 w-5" />
-        </Button>
-        {selectedCount > 0 && (
-          <div className="text-[10px] text-center text-muted-foreground -mt-1">
-            {selectedCount} selected
-          </div>
-        )}
       </div>
     </TooltipProvider>
   )

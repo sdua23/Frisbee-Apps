@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useFrisbee } from '@/lib/frisbee/store'
 import {
   drawArrows,
@@ -52,6 +52,13 @@ function toVecFromEvent(e: React.PointerEvent<HTMLCanvasElement>, canvas: HTMLCa
 export function FieldCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  // Canvas wrapper's display size in CSS pixels, computed via ResizeObserver to maintain
+  // the field's 2:3 aspect ratio while fitting inside the container. CSS `aspect-ratio`
+  // alone doesn't reliably preserve the ratio when the parent is narrower than the field,
+  // which causes the canvas to be stretched non-uniformly and clicks at the top/bottom of
+  // the field to land in the wrong spot.
+  const [wrapperSize, setWrapperSize] = useState({ w: 0, h: 0 })
 
   const play = useFrisbee((s) => s.play)
   const tool = useFrisbee((s) => s.tool)
@@ -197,6 +204,44 @@ export function FieldCanvas() {
   useEffect(() => {
     render()
   }, [render])
+
+  // Measure the container and compute the largest canvas wrapper that fits while preserving
+  // the field's 2:3 (600:900) aspect ratio. Updated on every container resize.
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const computeSize = () => {
+      const cs = getComputedStyle(container)
+      const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight)
+      const padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)
+      const availW = container.clientWidth - padX
+      const availH = container.clientHeight - padY
+      if (availW <= 0 || availH <= 0) return
+      // The wrapper has a 2px border on each side (border-2). The canvas fills the wrapper's
+      // content box (wrapper minus 4px). To make the canvas's displayed aspect ratio exactly
+      // match the internal 600:900, we need the wrapper's content box to have that ratio.
+      // So the wrapper itself needs to be (target + 4) × (target + 4) — we add 4 to compensate.
+      const ratio = FIELD_W / FIELD_H
+      const borderTotal = 4 // 2px on each side
+      // Try width-constrained first
+      let cw = availW - borderTotal // canvas content width
+      let ch = cw / ratio
+      if (ch + borderTotal > availH) {
+        // Height-constrained
+        ch = availH - borderTotal
+        cw = ch * ratio
+      }
+      const wrapperW = Math.floor(cw + borderTotal)
+      const wrapperH = Math.floor(ch + borderTotal)
+      setWrapperSize({ w: wrapperW, h: wrapperH })
+    }
+
+    computeSize()
+    const ro = new ResizeObserver(computeSize)
+    ro.observe(container)
+    return () => ro.disconnect()
+  }, [])
 
   // Find which player is at a given canvas-relative position
   function playerAt(vec: Vec2): string | null {
@@ -536,23 +581,35 @@ export function FieldCanvas() {
       className="relative w-full h-full flex items-center justify-center p-2 sm:p-3"
       style={{ touchAction: 'none' }}
     >
-      <canvas
-        ref={canvasRef}
-        width={FIELD_W}
-        height={FIELD_H}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerCancel}
-        className="rounded-xl shadow-2xl border-2 border-emerald-900/40 max-w-full max-h-full touch-none"
+      {/* The wrapper div maintains the field's 2:3 aspect ratio and contains the canvas.
+          The canvas fills the wrapper 100% with no border of its own, so
+          getBoundingClientRect() on the canvas returns the actual drawing area exactly.
+          We use a ResizeObserver to explicitly size the wrapper to fit within the parent
+          while preserving aspect ratio — CSS `aspect-ratio` + `max-width/height` alone
+          don't reliably maintain the ratio when the parent is narrower than the field. */}
+      <div
+        ref={wrapperRef}
+        className="rounded-xl shadow-2xl border-2 border-emerald-900/40 overflow-hidden"
         style={{
-          aspectRatio: `${FIELD_W} / ${FIELD_H}`,
-          height: '100%',
-          width: 'auto',
-          maxWidth: '100%',
-          objectFit: 'contain',
+          width: `${wrapperSize.w}px`,
+          height: `${wrapperSize.h}px`,
         }}
-      />
+      >
+        <canvas
+          ref={canvasRef}
+          width={FIELD_W}
+          height={FIELD_H}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerCancel}
+          className="block touch-none"
+          style={{
+            width: '100%',
+            height: '100%',
+          }}
+        />
+      </div>
     </div>
   )
 }
