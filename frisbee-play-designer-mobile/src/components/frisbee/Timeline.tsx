@@ -190,7 +190,7 @@ export function Timeline() {
 
         {/* Horizontal scroll strip — works great on touch (mobile) and mouse (desktop) */}
         <div className="flex-1 overflow-x-auto overflow-y-hidden min-h-0 lg:overflow-x-hidden lg:overflow-y-auto lg:block">
-          <div className="flex lg:flex-col gap-1.5 lg:px-0 px-1 pb-1 lg:pb-0 min-w-max lg:min-w-0">
+          <div className="flex lg:flex-col gap-1 lg:px-0 px-1 pb-1 lg:pb-0 min-w-max lg:min-w-0">
             {play.keyframes.map((kf, i) => {
               const isActive = i === currentFrameIndex
               const arrowCount = play.arrows.filter((a) => a.frameIndex === i).length
@@ -199,7 +199,9 @@ export function Timeline() {
                   key={kf.id}
                   className={cn(
                     'group rounded-md border p-2 cursor-pointer transition-colors shrink-0',
-                    'min-w-[110px] lg:min-w-0 lg:w-auto',
+                    // Mobile: fixed 80px width so multiple keyframes fit in the horizontal strip.
+                    // Desktop (lg): fill the column width, vertical stack.
+                    'w-[80px] lg:w-auto',
                     isActive
                       ? 'border-primary bg-primary/10'
                       : 'border-border hover:border-primary/40 hover:bg-accent/40',
@@ -222,10 +224,10 @@ export function Timeline() {
                     </div>
                     <Input
                       value={kf.note ?? ''}
-                      placeholder={`Frame ${i + 1}`}
+                      placeholder={`F${i + 1}`}
                       onChange={(e) => updateKeyframeNote(kf.id, e.target.value)}
                       onClick={(e) => e.stopPropagation()}
-                      className="h-7 text-xs border-0 bg-transparent focus-visible:ring-1 focus-visible:ring-primary/30 px-1 min-w-0"
+                      className="h-7 text-xs border-0 bg-transparent focus-visible:ring-1 focus-visible:ring-primary/30 px-1 min-w-0 w-full"
                     />
                     <div className="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity shrink-0">
                       {arrowCount > 0 && (
