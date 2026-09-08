@@ -3,7 +3,6 @@
 import { Toolbar } from '@/components/frisbee/Toolbar'
 import { FieldCanvas } from '@/components/frisbee/FieldCanvas'
 import { Timeline } from '@/components/frisbee/Timeline'
-import { SelectedPlayerCard } from '@/components/frisbee/SelectedPlayerCard'
 import { usePlayback } from '@/components/frisbee/usePlayback'
 import { useKeyboardShortcuts } from '@/components/frisbee/useKeyboardShortcuts'
 import { useFrisbee } from '@/lib/frisbee/store'
@@ -74,13 +73,10 @@ export default function Home() {
           <Toolbar />
         </aside>
 
-        {/* Desktop right timeline + selected player */}
+        {/* Desktop right timeline panel — fills the full right column now (no bottom card) */}
         <aside className="hidden lg:flex absolute inset-y-0 right-0 z-10 w-[340px] flex-col border-l border-border bg-card">
           <div className="flex-1 min-h-0 overflow-hidden">
             <Timeline />
-          </div>
-          <div className="border-t border-border bg-card/40 p-3 max-h-[40vh] overflow-y-auto">
-            <SelectedPlayerCard />
           </div>
         </aside>
 
@@ -100,14 +96,11 @@ export default function Home() {
           </div>
         )}
 
-        {/* Mobile overlay: timeline */}
+        {/* Mobile overlay: timeline — now uses the full height (no bottom card) */}
         {panel === 'timeline' && (
           <div className="lg:hidden absolute inset-y-0 right-0 z-20 w-[320px] max-w-[85vw] bg-card border-l border-border shadow-2xl flex flex-col">
             <div className="flex-1 min-h-0 overflow-hidden">
               <Timeline />
-            </div>
-            <div className="border-t border-border bg-card/40 p-3 max-h-[35vh] overflow-y-auto">
-              <SelectedPlayerCard />
             </div>
             <button
               onClick={() => setPanel(null)}

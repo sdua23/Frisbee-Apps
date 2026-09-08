@@ -62,7 +62,7 @@ export function Timeline() {
   }
 
   return (
-    <div className="flex flex-col gap-3 p-3 bg-card border-l border-border h-full overflow-y-auto">
+    <div className="flex flex-col gap-2 p-2 bg-card border-l border-border h-full overflow-y-auto">
       {/* Animation controls */}
       <div className="rounded-lg border border-border bg-background/40 p-3">
         <div className="flex items-center justify-between mb-2">
@@ -314,42 +314,36 @@ function PlayManager() {
       : 0
 
   return (
-    <div className="rounded-lg border border-border bg-background/40 p-3">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Play
-        </span>
-      </div>
-
+    <div className="rounded-lg border border-border bg-background/40 p-2">
       <Input
         value={play.name}
         onChange={(e) => renamePlay(e.target.value)}
         placeholder="Play name"
-        className="h-8 text-sm mb-2"
+        className="h-7 text-xs mb-1.5"
       />
 
-      <div className="grid grid-cols-2 gap-1.5">
-        <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => newPlay()}>
-          <FilePlus2 className="h-3.5 w-3.5 mr-1" /> New
+      <div className="grid grid-cols-2 gap-1">
+        <Button variant="outline" size="sm" className="h-7 text-[11px] px-1" onClick={() => newPlay()}>
+          <FilePlus2 className="h-3 w-3 mr-1" /> New
         </Button>
-        <Button variant="default" size="sm" className="h-8 text-xs" onClick={() => savePlay()}>
-          <Save className="h-3.5 w-3.5 mr-1" /> Save
+        <Button variant="default" size="sm" className="h-7 text-[11px] px-1" onClick={() => savePlay()}>
+          <Save className="h-3 w-3 mr-1" /> Save
         </Button>
         <Button
           variant="outline"
           size="sm"
-          className="h-8 text-xs"
+          className="h-7 text-[11px] px-1"
           onClick={() => {
             refreshSavedPlays()
             setShowSaved((v) => !v)
           }}
         >
-          <FolderOpen className="h-3.5 w-3.5 mr-1" /> Load
+          <FolderOpen className="h-3 w-3 mr-1" /> Load
         </Button>
         <Button
           variant="outline"
           size="sm"
-          className="h-8 text-xs"
+          className="h-7 text-[11px] px-1"
           onClick={() => {
             const json = exportPlay()
             const blob = new Blob([json], { type: 'application/json' })
@@ -361,7 +355,7 @@ function PlayManager() {
             URL.revokeObjectURL(url)
           }}
         >
-          <Download className="h-3.5 w-3.5 mr-1" /> JSON
+          <Download className="h-3 w-3 mr-1" /> JSON
         </Button>
       </div>
 
@@ -369,7 +363,7 @@ function PlayManager() {
       <Button
         variant="default"
         size="sm"
-        className="h-9 text-xs w-full mt-1.5 bg-orange-500 hover:bg-orange-600 text-white"
+        className="h-8 text-xs w-full mt-1 bg-orange-500 hover:bg-orange-600 text-white"
         onClick={handleExportGif}
         disabled={gifEncoding}
       >
@@ -386,17 +380,12 @@ function PlayManager() {
         )}
       </Button>
       {gifEncoding && (
-        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+        <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-muted">
           <div
             className="h-full bg-orange-500 transition-all duration-100"
             style={{ width: `${gifPct}%` }}
           />
         </div>
-      )}
-      {!gifEncoding && (
-        <p className="mt-1 text-[10px] text-muted-foreground leading-snug">
-          Renders the full play at 1× speed as a looping GIF (15 fps). Disc flight &amp; movement animate automatically.
-        </p>
       )}
 
       <input
@@ -418,10 +407,10 @@ function PlayManager() {
       <Button
         variant="outline"
         size="sm"
-        className="h-8 text-xs w-full mt-1.5"
+        className="h-7 text-[11px] w-full mt-1"
         onClick={() => fileInputRef.current?.click()}
       >
-        <Upload className="h-3.5 w-3.5 mr-1" /> Import JSON
+        <Upload className="h-3 w-3 mr-1" /> Import JSON
       </Button>
 
       {showSaved && (
