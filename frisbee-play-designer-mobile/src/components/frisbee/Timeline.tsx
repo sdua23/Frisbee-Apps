@@ -199,7 +199,7 @@ export function Timeline() {
                   key={kf.id}
                   className={cn(
                     'group rounded-md border p-2 cursor-pointer transition-colors shrink-0',
-                    // Mobile: fixed 80px width so multiple keyframes fit in the horizontal strip.
+                    // Mobile: fixed 110px width so multiple keyframes fit in the horizontal strip.
                     // Desktop (lg): fill the column width, vertical stack.
                     'w-[80px] lg:w-auto',
                     isActive
